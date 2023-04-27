@@ -5,8 +5,9 @@ let gameState = 'jugar';
 
 function setup() {
   createCanvas(600, 400);
-  jugador = new Jugador();
+  jugador = new Jugador(width/2, height-20);
 }
+
 function draw() { 
   noStroke(); 
   colorMode(RGB, 360, 100, 100);
@@ -34,7 +35,7 @@ function draw() {
         pelotas.splice(i, 1);
       }
     }
-    // Puntaje 
+  // Puntaje 
     textSize(24);
     fill(255);
     text('Puntaje: ' + puntaje, 20, 40);
@@ -49,10 +50,15 @@ function draw() {
     text('Puntaje final: ' + puntaje, width/2, height/2 + 40);
   }
 }
-class Jugador {
-  constructor() {
-    this.x = width/2;
-    this.y = height - 20;
+class Entidad {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+  }
+}
+class Jugador extends Entidad {
+  constructor(x, y) {
+    super(x, y);
   }
   display() {
     fill(255);
@@ -70,13 +76,13 @@ class Jugador {
     this.x = constrain(this.x, 20, width-60);
   }
 }
-class Pelota {
-  constructor() {
+class Pelota extends Entidad {
+  constructor(x, y) {
+    super(x, y);
     this.x = random(width);
     this.y = 0;
     this.speed = 3;
   }
-
   display() {
     fill(255, 0, 0);
     ellipse(this.x, this.y, 20, 20);
