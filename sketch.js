@@ -1,102 +1,105 @@
-class Figura {
-   constructor(x, y, alto, ancho, vx, vy) {
-    this.posicion = createVector(x,y);
-    this.alto = alto;
-    this.ancho = ancho;
-    this.fillred = 255;
-    this.fillgreen = 87;
-    this.fillblue = 57;
-    this.velocidad = createVector(vx,vy);
-  }
-  update()
-  {
-      if (this.posicion.x + this.ancho >= 400)
-        {  
-          let valor = random(3); 
-          this.velocidad.x = this.velocidad.x * -valor;
-         this.velocidad.y = this.velocidad.y * -valor;
-        }
-      this.posicion.add(this.velocidad);
-  }
-  
-}
-
-class Rectangulo extends Figura{
-  constructor(x, y, alto, ancho, vx, vy) {
-      super(x, y, alto, ancho, vx, vy);
-  }
-  
-draw()
-  {
-fill(this.fillred,this.fillgreen,this.fillblue);
-rect(this.posicion.x,this.posicion.y,this.alto,this.ancho);
-  }
-}
-
-class Elipse extends Figura{
-  constructor(x, y, alto, ancho, vx, vy) {
-      super(x, y, alto, ancho, vx, vy);
-  }
-  
-draw()
-  {
-fill(this.fillred,this.fillgreen,this.fillblue);
-ellipse(this.posicion.x,this.posicion.y,this.alto,this.ancho);
-  }
-}
-
-var figuras = [];
-var dibujando = 'circulo';
-var btnCirculo = null;
-var btnRectangulo = null;
-
-
-function mouseClicked() {
-  // Se crea un objeto según la opción actual
-if (mouseY > 25)
-  {
-  if (dibujando == 'circulo')
-    figuras.push(new Elipse(mouseX,mouseY,20,20,3,1));
-  else if (dibujando == 'rectangulo')
-    figuras.push(new Rectangulo(mouseX,mouseY,20,20,2,1));
-  }
-
-  return false;
-}
+let jugador;
+let pelotas = [];
+let puntaje = 0;
+let gameState = 'jugar';
 
 function setup() {
-  createCanvas(400, 400);
-  
-  btnCirculo = createButton('Circulo');
-  btnCirculo.position(0, 0);
-  btnCirculo.mousePressed(changeCirculo);
-  btnCirculo.style( 'background-color','#cccccc');
-  
-  btnRectangulo = createButton('Rectangulo');
-  btnRectangulo.position(75, 0);
-  btnRectangulo.mousePressed(changeRectangulo);
+  createCanvas(600, 400);
+  jugador = new Jugador();
 }
+function draw() { 
+  noStroke(); 
+  colorMode(RGB, 360, 100, 100);
+  background(10,30,50);
 
-function changeCirculo()
-   {
-     btnCirculo.style( 'background-color','#cccccc');
-     btnRectangulo.style( 'background-color','#f0f0f0');
-     dibujando = 'circulo';
-   }
-function changeRectangulo()
-   {
-     btnRectangulo.style( 'background-color','#cccccc');
-     btnCirculo.style( 'background-color','#f0f0f0');
-     dibujando = 'rectangulo';
-   }
+  if (gameState === 'jugar') {
+    // Mover la posición del jugador en la pantalla 
+    jugador.update();
+    jugador.display();
 
- 
+    // Aparecer nuevas pelotas
+    if (frameCount % 20 === 0) {
+      pelotas.push(new Pelota());
+    }
+    // Comprobar en la pantalla cada pelota 
+    for (let i = 0; i < pelotas.length; i++) {
+      pelotas[i].update();
+      pelotas[i].display();
+      if (pelotas[i].hits(jugador)) {
+        gameState = 'Juego Terminado';
+        return;
+      }
+      // Quitar las pelotas que desaparecen de la pantalla
+      if (pelotas[i].offscreen()) {
+        pelotas.splice(i, 1);
+      }
+    }
+    // Puntaje 
+    textSize(24);
+    fill(255);
+    text('Puntaje: ' + puntaje, 20, 40);
+    puntaje++;
+  } else if (gameState === 'Juego Terminado') {
+    // Pantalla de Game Over
+    textSize(36);
+    fill(255);
+    textAlign(CENTER);
+    text('Juego Terminado', width/2, height/2);
+    textSize(24);
+    text('Puntaje final: ' + puntaje, width/2, height/2 + 40);
+  }
+}
+class Jugador {
+  constructor() {
+    this.x = width/2;
+    this.y = height - 20;
+  }
+  display() {
+    fill(255);
+    rect(this.x-20, this.y-20, 80, 20);
+  }
+  // Mover al jugador con las teclas
+  update() {
+    if (keyIsDown(LEFT_ARROW)) {
+      this.x -= 10;
+    } 
+    if (keyIsDown(RIGHT_ARROW)) {
+      this.x += 10;
+    }
+    // Mantener al jugador
+    this.x = constrain(this.x, 20, width-60);
+  }
+}
+class Pelota {
+  constructor() {
+    this.x = random(width);
+    this.y = 0;
+    this.speed = 3;
+  }
 
-function draw() {
-  background(220);
-  figuras.forEach((fig) => 
-   {
-    fig.draw();
-    fig.update();
-   });
+  display() {
+    fill(255, 0, 0);
+    ellipse(this.x, this.y, 20, 20);
+  }
+  // Mover la pelota
+  update() {
+    this.y += this.speed;
+    this.speed += 0.2;
+  }
+  // Ver que la pelota chocó con el jugador
+  hits(jugador) {
+    if (dist(this.x, this.y, jugador.x, jugador.y) < 20) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+  // Comprobar que la pelota salió de la pantalla
+  offscreen() {
+    if (this.y > height) {
+      return true;
+    } else {
+      return false;
+    }
+  }
 }
